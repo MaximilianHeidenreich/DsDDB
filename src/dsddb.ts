@@ -59,6 +59,10 @@ export class DsDDB {
         this.cache["_hash"] = hash.toString();
     }
 
+    public exists(key: string): boolean {
+        return key in this.cache;
+    }
+
 
     // =====================    MANAGEMENT
 
