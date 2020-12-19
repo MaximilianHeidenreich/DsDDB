@@ -11,7 +11,7 @@
   <p align="center">
     A lightweight, develoepr friendly, key-value persistant storage solution for Deno projects</a>.
     <br />
-    <a href="https://dsddb.mod.land"><strong>Explore the docs »</strong></a>
+    <a href="https://doc.deno.land/https/deno.land/x/dsddb/mod.ts"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/MaximilianHeidenreich/DsDDB/issues">Report Bug</a>
@@ -39,3 +39,27 @@ If you want to use it, please check out the docs for the project.
 - Don't include anything else other than Deno std
 
 <br></br>
+
+<!-- USAGE -->
+## Usage
+
+This is the most basic example to get DsDDB up and running within your project. For further infroamtion check out the [API Documentation](https://doc.deno.land/https/deno.land/x/dsddb/mod.ts).
+
+```TypeScript
+// 1. Add import to your deps.ts
+export { DsDDB } from "https://deno.land/x/dsddb@v1.0.1/mod.ts";
+
+// 2. Create new DsDDB instance
+const database = new DsDDB();
+
+// 3. Load from disk
+await database.load();
+
+// 4. Use database
+if (!database.exists("myKey")) database.set("myKey", "Hello World");
+
+console.log(database.get("myKey"));
+
+// 5. Write data to disk
+await database.write();
+```
