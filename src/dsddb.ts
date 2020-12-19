@@ -1,4 +1,5 @@
 import { createHash } from "https://deno.land/std@0.81.0/hash/mod.ts";
+import { exists } from "https://deno.land/std@0.81.0/fs/mod.ts";
 
 /**
  * A super simple key-value database.
@@ -69,6 +70,7 @@ export class DsDDB {
 
     public async load(storePath?: string) {
         if (!storePath) storePath = this.storePath;
+        if (!await exists(storePath)) return;
         const data = await Deno.readFile(storePath);
         const decoded = JSON.parse(this.decoder.decode(data))
         if (decoded._hash !== this.cache._hash) {
