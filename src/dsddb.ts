@@ -74,7 +74,10 @@ export class DsDDB<T> {
      * @param {string} key 
      * @param {string} value 
      */
-    public set(key: string, value: string) {
+    public set(key: string, value: T, override = true) {
+
+        // Prevent override.
+        if (key in this.cache && !override) return;
 
         this.cache[key] = value;
 
