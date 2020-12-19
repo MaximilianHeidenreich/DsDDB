@@ -1,5 +1,4 @@
-import { createHash } from "https://deno.land/std@0.81.0/hash/mod.ts";
-import { exists } from "https://deno.land/std@0.81.0/fs/mod.ts";
+import { createHash, exists } from "../deps.ts";
 
 /**
  * A super simple key-value database.
