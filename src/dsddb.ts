@@ -3,15 +3,12 @@ import { exists } from "https://deno.land/std@0.81.0/fs/mod.ts";
 
 /**
  * A super simple key-value database.
+ * Keys always are strings.
+ * Value type can be specified through generics.
  */
-export class DsDDB {
+export class DsDDB<T> {
 
     // =====================    PROPS
-
-    /**
-     * The file path in which to store the data in.
-     */
-    private storePath: string;
 
     /**
      * Reference to the decoder which is used to load store files.
@@ -19,29 +16,42 @@ export class DsDDB {
     private decoder: TextDecoder;
 
     /**
-     * The actual data cache.
+     * The file path in which to store the data in.
      */
-    private cache: { [name: string]: string };
+    private storePath: string;
 
     /**
-     * Stores the last loaded hash from store data.
+     * The actual data cache.
      */
-    private lastLoadStoreHash: string;
+    private cache: { [name: string]: T };
+
+    /**
+     * The hashed value of currently cached data.
+     */
+    private cacheHash: string;
+
+    /**
+     * Stores the last known hash from store file.
+     */
+    private lastKnownStoreHash: string;
 
 
     // =====================    CONSTRUCTOR
 
     /**
      * Create a new {DsDDB} instance.
+     * If no custom path is given, it defaults to mainModulePath/.dsddb/store.json
      * 
      * @param {string} storePath A custom path where to write data
      */
     constructor(storePath?: string) {
 
-        this.storePath = storePath ? storePath : `${new URL('.', Deno.mainModule).pathname}.dsddb/store.json`;
         this.decoder = new TextDecoder('utf-8');
-        this.cache = { _hash: "" };
-        this.lastLoadStoreHash = "";
+
+        this.storePath = storePath ? storePath : `${new URL('.', Deno.mainModule).pathname}.dsddb/store.json`;
+        this.cache = {};
+        this.cacheHash = "";
+        this.lastKnownStoreHash = "";
 
     }
 
@@ -54,7 +64,7 @@ export class DsDDB {
      * @param {string} key 
      * @returns {string} Value
      */
-    public get(key: string): string {
+    public get(key: string): T {
         return this.cache[key];
     }
 
@@ -68,15 +78,12 @@ export class DsDDB {
 
         this.cache[key] = value;
 
-        // Calculate hash (!Exclude _hash property).
-        let values: { [name: string]: string } = {};
-        Object.assign(values, this.cache);
-        delete values["_hash"];
+        // Calculate new hash.
         let hash = createHash("md5");
-        hash.update(JSON.stringify(values));
+        hash.update(JSON.stringify(this.cache.valueOf()));
 
         // Store new hash.
-        this.cache["_hash"] = hash.toString();
+        this.cacheHash = hash.toString();
 
     }
 
@@ -104,12 +111,12 @@ export class DsDDB {
     public async write(storePath?: string, force: boolean = false) {
 
         // Write probably not necessary.
-        if (!force && this.lastLoadStoreHash === this.cache["_hash"]) return;
+        if (!force && this.lastKnownStoreHash === this.cacheHash) return;
 
         if (!storePath) storePath = this.storePath;
 
         // Write data.
-        await Deno.writeTextFile(storePath, JSON.stringify(this.cache));
+        await Deno.writeTextFile(storePath, JSON.stringify({ _hash: this.cacheHash, data: this.cache }));
     
     }
 
@@ -131,14 +138,12 @@ export class DsDDB {
         const decoded = JSON.parse(this.decoder.decode(data))
 
         // Reload probably not necessary.
-        if (!force && decoded._hash === this.cache._hash) return;
+        if (!force && decoded._hash === this.cacheHash) return;
         
         // Store new data.
-        this.cache = decoded;
-        this.lastLoadStoreHash = decoded["_hash"];
+        this.cache = decoded.data;
+        this.lastKnownStoreHash = decoded._hash;
         
     }
-
-    
 
 }
