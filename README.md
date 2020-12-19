@@ -35,6 +35,7 @@ If you want to use it, please check out the docs for the project.
 - Store & Access key-value pairs
 - Write stored data to disk
 - Load stored data from disk
-- Expose a dead simple API to developers 
+- Expose a dead simple API to developers
+- Don't include anything else other than Deno std
 
 <br></br>
