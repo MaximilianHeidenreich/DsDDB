@@ -101,6 +101,7 @@ export class DsDDB<T> {
      * @param {string} key Lookup key
      * @returns {boolean} Whether the key is stored in the database
      */
+    public contains(key: string): boolean {
         return key in this._cache;
     }
 
