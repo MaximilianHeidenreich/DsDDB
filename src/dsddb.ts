@@ -150,6 +150,17 @@ export class DsDDB<T> {
         this._cache = decoded.data;
         this._lastKnownStoreHash = decoded._hash;
         
+    
+    /**
+     * Deletes a store file / directiory.
+     * 
+     * @param storePath Custom path used by delete operation. Defaults to the default storage file path
+     */
+    public async deleteStore(storePath?: string): Promise<void> {
+        if (!storePath) storePath = this._storePath;
+        if (!await exists(storePath)) return;
+        return Deno.remove(storePath);
+    }
 
 
     // =====================    GETTER & SETTER
