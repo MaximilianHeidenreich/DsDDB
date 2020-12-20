@@ -150,6 +150,24 @@ export class DsDDB<T> {
         this._cache = decoded.data;
         this._lastKnownStoreHash = decoded._hash;
         
+
+
+    // =====================    GETTER & SETTER
+
+    /**
+     * Return internal storePath.
+     */
+    public get storePath(): string {
+        return this._storePath;
+    }
+
+    /**
+     * Set internal storePath.
+     * 
+     * @param {string} storePath The new path
+     */
+    public set storePath(storePath: string) {
+        this._storePath = storePath;
     }
 
 }
