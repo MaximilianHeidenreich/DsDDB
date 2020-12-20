@@ -152,9 +152,9 @@ export class DsDDB<T> {
         // Store new data.
         this._cache = decoded.data;
         this._lastKnownStoreHash = decoded._hash;
-        
+
         return true;
-    
+        
     }
     
     /**
