@@ -47,7 +47,7 @@ This is the most basic example to get DsDDB up and running within your project. 
 
 ```TypeScript
 // 1. Import DsDDB
-import { DsDDB } from "https://deno.land/x/dsddb@v1.1.0/mod.ts";
+import { DsDDB } from "https://deno.land/x/dsddb@v2.0.0/mod.ts";
 
 // 2. Create new DsDDB instance
 const database = new DsDDB();
@@ -70,7 +70,7 @@ If you want to store custom data structures, there's a solution to that as well.
 
 ```TypeScript
 // 1. Import DsDDB
-import { DsDDB } from "https://deno.land/x/dsddb@v1.1.0/mod.ts";
+import { DsDDB } from "https://deno.land/x/dsddb@v2.0.0/mod.ts";
 
 // 2. Define your data structure.
 interface IDino {
