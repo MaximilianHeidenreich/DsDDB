@@ -44,9 +44,9 @@ export class DsDDB<T> {
 
     /**
      * Create a new {DsDDB} instance.
-     * If no custom path is given, it defaults to mainModulePath/.dsddb/store.json
+     * If no custom path is given, it defaults to mainModulePath/.store.json
      * 
-     * @param {string} storePath A custom path where to write data
+     * @param storePath A custom path where to write data
      */
     constructor(storePath?: string) {
 
@@ -66,8 +66,8 @@ export class DsDDB<T> {
     /**
      * Retrieves a value from database by specified key.
      * 
-     * @param {string} key 
-     * @returns {string} Value
+     * @param key The key
+     * @returns The value
      */
     public get(key: string): T {
         return this._cache[key];
@@ -76,8 +76,9 @@ export class DsDDB<T> {
     /**
      * Set's a value in the database by the specified key.
      * 
-     * @param {string} key 
-     * @param {string} value 
+     * @param key The key
+     * @param value The new value
+     * @param override Whether to overide the value if it's already stored
      */
     public set(key: string, value: T, override = true) {
 
@@ -98,8 +99,8 @@ export class DsDDB<T> {
     /**
      * Check whether a key is stored inside the database.
      * 
-     * @param {string} key Lookup key
-     * @returns {boolean} Whether the key is stored in the database
+     * @param key Lookup key
+     * @returns Whether the key is stored in the database
      */
     public contains(key: string): boolean {
         return key in this._cache;
@@ -113,10 +114,10 @@ export class DsDDB<T> {
      * Won't perform write if the last known hash from the store file 
      * matches the current cache hash.
      * 
-     * @param {string} storePath Custom file path used by write operation
-     * @param {boolean} force Ignore hashe comparison and force write
+     * @param storePath Custom file path used by write operation
+     * @param force Ignore hashe comparison and force write
      */
-    public async write(storePath?: string, force: boolean = false) {
+    public async write(storePath?: string, force: boolean = false): Promise<void> {
 
         // Write probably not necessary.
         if (!force && this._lastKnownStoreHash === this._cacheHash) return;
@@ -133,12 +134,13 @@ export class DsDDB<T> {
      * Won't update cache values if hash in store file matches current cache file.
      * // TODO: Store & Check file hash.
      * 
-     * @param {string} storePath Custom file path used by read operation
-     * @param {boolean} force Ignore hashe comparison and force read
+     * @param storePath Custom file path used by read operation
+     * @param force Ignore hashe comparison and force read
      */
-    public async load(storePath?: string, force: boolean = false) {
+    public async load(storePath?: string, force: boolean = false): Promise<boolean> {
 
         if (!storePath) storePath = this._storePath;
+        if (!await exists(storePath)) return false;
 
         // Load data from file.
         const data = await Deno.readFile(storePath);
@@ -151,6 +153,9 @@ export class DsDDB<T> {
         this._cache = decoded.data;
         this._lastKnownStoreHash = decoded._hash;
         
+        return true;
+    
+    }
     
     /**
      * Deletes a store file / directiory.
