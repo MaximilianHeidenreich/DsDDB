@@ -12,27 +12,32 @@ export class DsDDB<T> {
     /**
      * Reference to the decoder which is used to load store files.
      */
-    private decoder: TextDecoder;
+    private _decoder: TextDecoder;
+
+    /**
+     * Reference to the encoder which is used to write store files.
+     */
+    private _encoder: TextEncoder;
 
     /**
      * The file path in which to store the data in.
      */
-    private storePath: string;
+    private _storePath: string;
 
     /**
      * The actual data cache.
      */
-    private cache: { [name: string]: T };
+    private _cache: { [name: string]: T };
 
     /**
      * The hashed value of currently cached data.
      */
-    private cacheHash: string;
+    private _cacheHash: string;
 
     /**
      * Stores the last known hash from store file.
      */
-    private lastKnownStoreHash: string;
+    private _lastKnownStoreHash: string;
 
 
     // =====================    CONSTRUCTOR
@@ -45,12 +50,13 @@ export class DsDDB<T> {
      */
     constructor(storePath?: string) {
 
-        this.decoder = new TextDecoder('utf-8');
+        this._decoder = new TextDecoder("utf-8");
+        this._encoder = new TextEncoder();
 
-        this.storePath = storePath ? storePath : `${new URL('.', Deno.mainModule).pathname}.dsddb/store.json`;
-        this.cache = {};
-        this.cacheHash = "";
-        this.lastKnownStoreHash = "";
+        this._storePath = storePath ? storePath : `${new URL('.', Deno.mainModule).pathname}.store.json`;
+        this._cache = {};
+        this._cacheHash = "";
+        this._lastKnownStoreHash = "";
 
     }
 
@@ -64,7 +70,7 @@ export class DsDDB<T> {
      * @returns {string} Value
      */
     public get(key: string): T {
-        return this.cache[key];
+        return this._cache[key];
     }
 
     /**
@@ -76,16 +82,16 @@ export class DsDDB<T> {
     public set(key: string, value: T, override = true) {
 
         // Prevent override.
-        if (key in this.cache && !override) return;
+        if (key in this._cache && !override) return;
 
-        this.cache[key] = value;
+        this._cache[key] = value;
 
         // Calculate new hash.
         let hash = createHash("md5");
-        hash.update(JSON.stringify(this.cache.valueOf()));
+        hash.update(JSON.stringify(this._cache.valueOf()));
 
         // Store new hash.
-        this.cacheHash = hash.toString();
+        this._cacheHash = hash.toString();
 
     }
 
@@ -95,8 +101,7 @@ export class DsDDB<T> {
      * @param {string} key Lookup key
      * @returns {boolean} Whether the key is stored in the database
      */
-    public exists(key: string): boolean {
-        return key in this.cache;
+        return key in this._cache;
     }
 
 
@@ -113,12 +118,12 @@ export class DsDDB<T> {
     public async write(storePath?: string, force: boolean = false) {
 
         // Write probably not necessary.
-        if (!force && this.lastKnownStoreHash === this.cacheHash) return;
-
-        if (!storePath) storePath = this.storePath;
+        if (!force && this._lastKnownStoreHash === this._cacheHash) return;
+        if (!storePath) storePath = this._storePath;
 
         // Write data.
-        await Deno.writeTextFile(storePath, JSON.stringify({ _hash: this.cacheHash, data: this.cache }));
+        const data = JSON.stringify({ _hash: this._cacheHash, data: this._cache });
+        return Deno.writeFile(storePath, this._encoder.encode(data));
     
     }
 
@@ -132,19 +137,18 @@ export class DsDDB<T> {
      */
     public async load(storePath?: string, force: boolean = false) {
 
-        if (!storePath) storePath = this.storePath;
-        if (!await exists(storePath)) return;
+        if (!storePath) storePath = this._storePath;
 
         // Load data from file.
         const data = await Deno.readFile(storePath);
-        const decoded = JSON.parse(this.decoder.decode(data))
+        const decoded = JSON.parse(this._decoder.decode(data))
 
         // Reload probably not necessary.
-        if (!force && decoded._hash === this.cacheHash) return;
+        if (!force && decoded._hash === this._cacheHash) return true;
         
         // Store new data.
-        this.cache = decoded.data;
-        this.lastKnownStoreHash = decoded._hash;
+        this._cache = decoded.data;
+        this._lastKnownStoreHash = decoded._hash;
         
     }
 
