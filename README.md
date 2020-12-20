@@ -45,6 +45,8 @@ If you want to use it, please check out the docs for the project.
 
 This is the most basic example to get DsDDB up and running within your project. For further infroamtion check out the [API Documentation](https://doc.deno.land/https/deno.land/x/dsddb/mod.ts).
 
+> ! Note: If you are using the load() and write() methods, you need to run your Deno program with the "--unstable --allow-read --allow-write" flags.
+
 ```TypeScript
 // 1. Import DsDDB
 import { DsDDB } from "https://deno.land/x/dsddb@v2.0.0/mod.ts";
