@@ -6,8 +6,8 @@ jobs:
 
     strategy:
       matrix:
-        deno: [1.6.1, 1.5.1]
-    name: Test with Deno ${{ matrix.deno }} 
+        deno: [1.16.4]
+    name: Test with Deno ${{ matrix.deno }}
 
     steps:
       - uses: actions/checkout@master
@@ -17,16 +17,11 @@ jobs:
         with:
           deno-version: ${{ matrix.deno }}
 
-      - name: Setup Node
-        uses: actions/setup-node@master
-        with:
-          node-version: 12
-
       - name: Print deno version
         run: deno --version
 
-      #- name: Check format
-      #  run: deno fmt --check **/*.ts
+      - name: Check format
+        run: deno fmt --check
 
       - name: Run tests
-        run: deno test --unstable --allow-read --allow-write
+        run: deno test --allow-read --allow-write
