@@ -47,6 +47,6 @@ Deno.test("DB delete store", async () => {
     if (x) await Deno.remove(db.storePath);
 
     assertEquals(x, false);
-    
+
 
 });
