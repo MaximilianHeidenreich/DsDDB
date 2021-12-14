@@ -8,7 +8,7 @@
 <h2 align="center">DsDDB</h2>
 
 <p align="center">
-    A lightweight, develoepr friendly, key-value persistant storage solution for Deno projects</a>.
+    A lightweight, developer friendly, key-value persistant storage solution for Deno projects</a>.
     <br />
     <a href="https://doc.deno.land/https/deno.land/x/dsddb/mod.ts"><strong>Explore the docs »</strong></a>
     <br />
@@ -49,7 +49,7 @@ If you want to use it, please check out the docs for the project.
 ## Usage
 
 This is the most basic example to get DsDDB up and running within your project.
-For further infroamtion check out the
+For further information check out the
 [API Documentation](https://doc.deno.land/https/deno.land/x/dsddb/mod.ts).
 
 > ! Note: If you are using the load() and write() methods, you need to run your
@@ -57,7 +57,7 @@ For further infroamtion check out the
 
 ```TypeScript
 // 1. Import DsDDB
-import { DsDDB } from "https://deno.land/x/dsddb@v2.0.0/mod.ts";
+import { DsDDB } from "https://deno.land/x/dsddb@v2.1.0/mod.ts";
 
 // 2. Create new DsDDB instance
 const database = new DsDDB();
@@ -79,7 +79,7 @@ If you want to store custom data structures, there's a solution to that as well.
 
 ```TypeScript
 // 1. Import DsDDB
-import { DsDDB } from "https://deno.land/x/dsddb@v2.0.0/mod.ts";
+import { DsDDB } from "https://deno.land/x/dsddb@v2.1.0/mod.ts";
 
 // 2. Define your data structure.
 interface IDino {
