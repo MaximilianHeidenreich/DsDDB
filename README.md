@@ -1,4 +1,3 @@
-
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
@@ -6,9 +5,9 @@
     <img src="https://deno.land/images/deno_matrix.png" alt="Deno Logo" width="80" height="80">
   </a>
 
-  <h2 align="center">DsDDB</h2>
+<h2 align="center">DsDDB</h2>
 
-  <p align="center">
+<p align="center">
     A lightweight, develoepr friendly, key-value persistant storage solution for Deno projects</a>.
     <br />
     <a href="https://doc.deno.land/https/deno.land/x/dsddb/mod.ts"><strong>Explore the docs »</strong></a>
@@ -21,12 +20,17 @@
 </p>
 
 <br><br>
+
 <!-- ABOUT THE PROJECT -->
+
 ## About The Project
 
-I created this project because I needed a super simple key-value database which could store data between script restarts. This is the result of that attempt.
+I created this project because I needed a super simple key-value database which
+could store data between script restarts. This is the result of that attempt.
 
-Obviously it can't hold up with "real" databases but if you are just starting out developing a new project and you want a dead simple way to store data, this probably is the solution for you.
+Obviously it can't hold up with "real" databases but if you are just starting
+out developing a new project and you want a dead simple way to store data, this
+probably is the solution for you.
 
 If you want to use it, please check out the docs for the project.
 
@@ -41,11 +45,15 @@ If you want to use it, please check out the docs for the project.
 <br>
 
 <!-- USAGE -->
+
 ## Usage
 
-This is the most basic example to get DsDDB up and running within your project. For further infroamtion check out the [API Documentation](https://doc.deno.land/https/deno.land/x/dsddb/mod.ts).
+This is the most basic example to get DsDDB up and running within your project.
+For further infroamtion check out the
+[API Documentation](https://doc.deno.land/https/deno.land/x/dsddb/mod.ts).
 
-> ! Note: If you are using the load() and write() methods, you need to run your Deno program with the "--unstable --allow-read --allow-write" flags.
+> ! Note: If you are using the load() and write() methods, you need to run your
+> Deno program with the "--allow-read --allow-write" flags.
 
 ```TypeScript
 // 1. Import DsDDB
@@ -58,15 +66,14 @@ const database = new DsDDB();
 await database.load();
 
 // 4. Use database
-database.set("key1", "value 1")                 // Always override value.
-database.set("myKey", "Hello World", false);    // Never  override value.
+database.set("key1", "value 1"); // Always override value.
+database.set("myKey", "Hello World", false); // Never  override value.
 
 console.log(database.get("myKey"));
 
 // 5. Write data to disk
 await database.write();
 ```
-
 
 If you want to store custom data structures, there's a solution to that as well.
 
@@ -76,16 +83,16 @@ import { DsDDB } from "https://deno.land/x/dsddb@v2.0.0/mod.ts";
 
 // 2. Define your data structure.
 interface IDino {
-    name: string;
-    size: number;
-    birthday: Date;
+  name: string;
+  size: number;
+  birthday: Date;
 }
 
 // 3. Define your data.
 let data1: IDino = {
-    name: "Deno",
-    size: 69,
-    birthday: new Date()
+  name: "Deno",
+  size: 69,
+  birthday: new Date(),
 };
 
 // 4. Create new DsDDB instance
@@ -95,7 +102,7 @@ const database = new DsDDB<IDino>();
 await database.load();
 
 // 6. Use database
-database.set("deno", data1)
+database.set("deno", data1);
 
 console.log(database.get("deno"));
 
