@@ -2,7 +2,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/MaximilianHeidenreich/DsDDB">
-    <img src="https://deno.land/images/deno_matrix.png" alt="Deno Logo" width="80" height="80">
+    <img src="https://deno.land/logo.svg" alt="Deno Logo" width="80" height="80">
   </a>
 
 <h2 align="center">DsDDB</h2>
