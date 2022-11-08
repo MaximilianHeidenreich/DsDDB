@@ -71,6 +71,14 @@ export class DsDDB<T> {
   }
 
   /**
+   * 
+   * @returns key/value pairs of the database
+   */
+  public getAll() {
+    return Object.entries(this._cache)
+  }
+
+  /**
    * Set's a value in the database by the specified key.
    *
    * @param key The key
