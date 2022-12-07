@@ -6,7 +6,7 @@ jobs:
 
     strategy:
       matrix:
-        deno: [1.16.4]
+        deno: [1.28.3]
     name: Test with Deno ${{ matrix.deno }}
 
     steps:
