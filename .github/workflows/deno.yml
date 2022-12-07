@@ -22,6 +22,9 @@ jobs:
 
       - name: Check format
         run: deno fmt --check
+      
+      - name: Run deno lint
+        run: deno lint
 
       - name: Run tests
         run: deno test --allow-read --allow-write
