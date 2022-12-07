@@ -1,6 +1,10 @@
 import { SEP } from "$std/path/mod.ts";
 import hashStr from "./hash.ts";
 
+interface KvDDBSchema<T> {
+    _hash: number;
+    data: Record<string, T>;
+}
 abstract class DDB {
 	/**
 	 * Path to folder in which to store data in.
@@ -17,13 +21,8 @@ abstract class DDB {
 		}
 	}
 
-	abstract write(force: boolean): Promise<void>;
-	public async load(force = false): Promise<Record<string, unknown>> {
-		// Read from file.
-		const data = await Deno.readTextFile(this._storePath);
-		const parsed = JSON.parse(data);
-		return parsed as Record<string, unknown>;
-	}
+	abstract write(force: boolean): Promise<boolean>;
+	abstract load(force: boolean): Promise<boolean>;
 	public async deleteStore() {}
 }
 
@@ -79,25 +78,41 @@ export class KvDDB<T> extends DDB implements Iterable<[string, T]> {
 		);
 	}
 
-	/*public override load(): Promise<Record<string, T>> {
+    /**
+     * Loads the store file into the cache.
+     * If the store file hash is the same as the current cache hash, operation will be skipped.
+     * @param force Whether to force load, even if store file hash is the same as current cache hash.
+     * @returns true when cache was updated, false otherwise.
+     */
+	public override async load(force = false): Promise<boolean> {
+        const data = await Deno.readTextFile(this._storePath);
+        const parsed = JSON.parse(data) as KvDDBSchema<T>;
+        if (!force && parsed._hash === this._cacheHash) return false;
 
-    }*/
+        // Store new data.
+        this._cache = new Map(Object.entries(parsed.data));
+        this._cacheHash = parsed._hash;
+        this._lastStoredHash = parsed._hash;
+        return true;
+    }
 
 	/**
 	 * Writes the current cache to the store file.
 	 * If the cache hash is the same as the last stored hash, operation will be skipped.
 	 * @param force Force write, even if cache hash is the same as last stored hash.
-	 * @returns
+	 * @returns true when store file was written, false otherwise.
 	 */
-	public override write(force = false): Promise<void> {
+	public override async write(force = false): Promise<boolean> {
 		if (!force && this._cacheHash === this._lastStoredHash) {
-			return Promise.resolve();
+			return false;
 		}
-		const data = JSON.stringify({
-			_hash: this._cacheHash,
-			data: Object.fromEntries(this._cache),
-		});
-		return Deno.writeTextFile(this._storePath, data, { create: true });
+        const data: KvDDBSchema<T> = {
+            _hash: this._cacheHash,
+			data: Object.fromEntries(this._cache)
+        }
+		const str = JSON.stringify(data);
+		await Deno.writeTextFile(this._storePath, str, { create: true });
+        return true;
 	}
 
 	/**
