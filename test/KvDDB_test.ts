@@ -88,3 +88,21 @@ Deno.test("KvDDB - Clear", () => {
     assertEquals(db.has("foo"), false);
     assertEquals(db.get("hello"), null);
 });
+
+Deno.test("KvDDB - Write store file", () => { // TODO: impl
+    resetTestEnv();
+    const db = new KvDDB();
+    db.set("hello", "world");
+    db.write(true);
+
+    assertEquals(db.cache.get("hello"), "world"); 
+});
+
+Deno.test("KvDDB - Load store file", () => { // TODO: impl
+    resetTestEnv();
+    const db = new KvDDB();
+    db.set("hello", "world");
+    db.write(true);
+
+    assertEquals(db.cache.get("hello"), "world"); 
+});
