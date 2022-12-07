@@ -1,1 +1,1 @@
-export * from "./src/dsddb.ts";
+export { KvDDB } from "./src/dsddb.ts";
