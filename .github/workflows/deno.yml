@@ -20,7 +20,7 @@ jobs:
       - name: Print deno version
         run: deno --version
 
-      - name: Check format
+      - name: Run deno fmt
         run: deno fmt --check
       
       - name: Run deno lint
