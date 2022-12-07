@@ -1,202 +1,164 @@
-import { Md5 } from "../deps.ts";
+import { SEP } from "$std/path/mod.ts";
+import hashStr from "./hash.ts";
+abstract class DDB {
+
+    /**
+     * Path to folder in which to store data in.
+     */
+    protected _storePath: string;
+
+    constructor(storePath?: string) {
+        if (storePath) this._storePath = storePath;
+        else {
+            const dir = `${new URL(".", Deno.mainModule).pathname}.dsddb`;
+            const file = `.kvddb.json`;
+            Deno.mkdirSync(dir, { recursive: true });
+            this._storePath = `${dir}${SEP}${file}`;
+        }
+    }
+
+    abstract write(force: boolean): Promise<void>
+    public async load(force = false): Promise<Record<string, unknown>> {
+        // Read from file.
+        const data = await Deno.readTextFile(this._storePath);
+        const parsed = JSON.parse(data);
+        return parsed as Record<string, unknown>;
+    }
+    public async deleteStore() {}
+
+}
 
 /**
  * A super simple key-value database.
- * Keys always are strings.
- * Value type can be specified through generics.
+ * Key type has to be a string.
+ * Value type can be specified through generic T.
  */
-export class DsDDB<T> {
-  // =====================    PROPS
+export class KvDDB<T> extends DDB implements Iterable<[string, T]> {
 
-  /**
-   * Reference to the decoder which is used to load store files.
-   */
-  private _decoder: TextDecoder;
+    /**
+     * The data cache.
+     */
+    private _cache: Map<string, T>;
 
-  /**
-   * Reference to the encoder which is used to write store files.
-   */
-  private _encoder: TextEncoder;
+    /**
+     * The hashed value of currently cached data.
+     * Used to determine whether the cache has changed since the 
+     * last write and needs to be written to store file.
+     */
+    private _cacheHash: number;
 
-  /**
-   * The file path in which to store the data in.
-   */
-  private _storePath: string;
+    /**
+     * Stores the last known hash from store file.
+     * Compared agains _cahceHash to determine whether the cache 
+     * has changed and needs to be written to store file.
+     */
+    private _lastStoredHash: number;
 
-  /**
-   * The actual data cache.
-   */
-  private _cache: { [name: string]: T };
-
-  /**
-   * The hashed value of currently cached data.
-   */
-  private _cacheHash: string;
-
-  /**
-   * Stores the last known hash from store file.
-   */
-  private _lastKnownStoreHash: string;
-
-  // =====================    CONSTRUCTOR
-
-  /**
-   * Create a new {DsDDB} instance.
-   * If no custom path is given, it defaults to mainModulePath/.store.json
-   *
-   * @param storePath A custom path where to write data
-   */
-  constructor(storePath?: string) {
-    this._decoder = new TextDecoder("utf-8");
-    this._encoder = new TextEncoder();
-
-    this._storePath = storePath
-      ? storePath
-      : `${new URL(".", Deno.mainModule).pathname}.store.json`;
-    this._cache = {};
-    this._cacheHash = "";
-    this._lastKnownStoreHash = "";
-  }
-
-  // =====================    DATA ACCESS
-
-  /**
-   * Retrieves a value from database by specified key.
-   *
-   * @param key The key
-   * @returns The value
-   */
-  public get(key: string): T {
-    return this._cache[key];
-  }
-
-  /**
-   * 
-   * @returns key/value pairs of the database
-   */
-  public getAll() {
-    return Object.entries(this._cache)
-  }
-
-  /**
-   * Set's a value in the database by the specified key.
-   *
-   * @param key The key
-   * @param value The new value
-   * @param override Whether to overide the value if it's already stored
-   */
-  public set(key: string, value: T, override = true) {
-    // Prevent override.
-    if (key in this._cache && !override) return;
-
-    this._cache[key] = value;
-
-    // Calculate new hash.
-    let hash = new Md5();
-    hash.update(JSON.stringify(this._cache.valueOf()));
-
-    // Store new hash.
-    this._cacheHash = hash.toString();
-  }
-
-  /**
-   * Check whether a key is stored inside the database.
-   *
-   * @param key Lookup key
-   * @returns Whether the key is stored in the database
-   */
-  public contains(key: string): boolean {
-    return key in this._cache;
-  }
-
-  // =====================    MANAGEMENT
-
-  /**
-   * Writes cached data to disk.
-   * Won't perform write if the last known hash from the store file
-   * matches the current cache hash.
-   *
-   * @param storePath Custom file path used by write operation
-   * @param force Ignore hashe comparison and force write
-   */
-  public async write(
-    storePath?: string,
-    force: boolean = false,
-  ): Promise<void> {
-    // Write probably not necessary.
-    if (!force && this._lastKnownStoreHash === this._cacheHash) return;
-    if (!storePath) storePath = this._storePath;
-
-    // Write data.
-    const data = JSON.stringify({ _hash: this._cacheHash, data: this._cache });
-    return Deno.writeFile(storePath, this._encoder.encode(data));
-  }
-
-  /**
-   * Load stored data from disk into cache.
-   * Won't update cache values if hash in store file matches current cache file.
-   * // TODO: Store & Check file hash.
-   *
-   * @param storePath Custom file path used by read operation
-   * @param force Ignore hashe comparison and force read
-   */
-  public async load(
-    storePath?: string,
-    force: boolean = false,
-  ): Promise<boolean> {
-    if (!storePath) storePath = this._storePath;
-
-    // Load data from file.
-    let data: Uint8Array;
-    try {
-      data = await Deno.readFile(storePath);
-    } catch (error) {
-      // TODO: if verbose show error
-      return false;
+    /**
+     * Creates a new Key-Value database bound to a specific file.
+     * @param storeFilePath Path to .json file in which to store data in.
+     */
+    constructor(storeFilePath?: string) {
+        super(storeFilePath);
+        this._cache = new Map<string, T>();
+        this._cacheHash = 0;
+        this._lastStoredHash = 0;
     }
-    const decoded = JSON.parse(this._decoder.decode(data));
 
-    // Reload probably not necessary.
-    if (!force && decoded._hash === this._cacheHash) return true;
-
-    // Store new data.
-    this._cache = decoded.data;
-    this._lastKnownStoreHash = decoded._hash;
-
-    return true;
-  }
-
-  /**
-   * Deletes a store file / directiory.
-   *
-   * @param storePath Custom path used by delete operation. Defaults to the default storage file path
-   */
-  public async deleteStore(storePath?: string): Promise<void> {
-    if (!storePath) storePath = this._storePath;
-
-    try {
-      await Deno.remove(storePath);
-    } catch (error) {
-      // TODO: if verbose show error
+    // Pass through iterator from cache map.
+    // Enables convenient for (const [key, value] of db) { ... } loops.
+    public [Symbol.iterator] () {
+        return this._cache.entries();
     }
-    return;
-  }
 
-  // =====================    GETTER & SETTER
+    /**
+     * Updates the cache hash based on the current cache state.
+     */
+    private _updateCacheHash() {
+        // Stringify cache map & calculate new hash.
+        this._cacheHash = hashStr(JSON.stringify(Object.fromEntries(this._cache)));
+    }
 
-  /**
-   * Return internal storePath.
-   */
-  public get storePath(): string {
-    return this._storePath;
-  }
+    /*public override load(): Promise<Record<string, T>> {
 
-  /**
-   * Set internal storePath.
-   *
-   * @param {string} storePath The new path
-   */
-  public set storePath(storePath: string) {
-    this._storePath = storePath;
-  }
+    }*/
+
+    /**
+     * Writes the current cache to the store file.
+     * If the cache hash is the same as the last stored hash, operation will be skipped.
+     * @param force Force write, even if cache hash is the same as last stored hash.
+     * @returns 
+     */
+    public override write(force = false): Promise<void> {
+        if (!force && this._cacheHash === this._lastStoredHash) 
+            return Promise.resolve();
+        const data = JSON.stringify({ _hash: this._cacheHash, data: Object.fromEntries(this._cache) });
+        return Deno.writeTextFile(this._storePath, data, { create: true });
+    }
+
+    /**
+     * Returns the value of a key if it exists.
+     * @param key The key to get the value of.
+     * @returns The value or null if it doesn't exist.
+     */
+    public get(key: string): T | null {
+        return this._cache.get(key) ?? null;
+    }
+
+    /*public getAll(): Record<string, T> {}*/
+    
+    /**
+     * Set's the value of the specified key.
+     * By default it will not override the value if key already exists.
+     * By default it will not save the new database state to store file.
+     * @param key The key to set the value of.
+     * @param value The value to set.
+     * @param override Whether to override the value if it already exists.
+     * @param write Whether to write the new database state to store file.
+     * @returns Whether the value has ben set.
+     */
+    public set(key: string, value: T, override = true, write = false): boolean {
+        if (this._cache.has(key) && !override) return false;
+        this._cache.set(key, value);
+        this._updateCacheHash();
+        if (write) this.write(); // TODO: async in sync method?
+        return true;
+    }
+
+    /**
+     * @param key The key to check for.
+     * @returns boolean indicating whether the key exists.
+     */
+    public has(key: string): boolean {
+        return this._cache.has(key);
+    }
+
+    /**
+     * @returns The number of entries in the database.
+     */
+    public get size(): number {
+        return this._cache.size;
+    }
+
+    /**
+     * @param key The key to delete.
+     * @returns true when the key has been deleted, false if it didn't exist.
+     */
+    public delete(key: string): boolean {
+        const res = this._cache.delete(key);
+        if (res) this._updateCacheHash();
+        return res;
+    }
+
+    /**
+     * Clears the database.
+     */
+    public clear(): void {
+        this._cache.clear();
+    }
+
+    public get cache() {
+        return this._cache;
+    }
+
 }
